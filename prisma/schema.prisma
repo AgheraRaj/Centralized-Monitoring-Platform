@@ -1,0 +1,368 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model bukt_compressor_readings {
+  id                           BigInt  @id @default(autoincrement())
+  reading_number               String?
+  date_time                    String?
+  equipment_name               String?
+  station_name                 String?
+  suction_pressure             String?
+  stage1_discharge_pressure    String?
+  stage2_discharge_pressure    String?
+  stage3_discharge_pressure    String?
+  car_dispenser_priority       String?
+  bus_dispenser_priority       String?
+  mobile_cascade_priority      String?
+  compressor_lube_oil_pressure String?
+  eng_lub_oil_pressure         String?
+  bdv_pressure                 String?
+  suction_temp                 String?
+  stage1_discharge_temp        String?
+  stage2_discharge_temp        String?
+  stage3_discharge_temp        String?
+  after_cooler                 String?
+  eng_aux_cooling_water_temp   String?
+  eng_jack_cooling_water_temp  String?
+  eng_lub_oil_unit_1           String?
+  eng_exhaust_temp             String?
+  eng_rpm                      String?
+  fd1                          String?
+  fd2                          String?
+  fd3                          String?
+  fd4                          String?
+  gd1                          String?
+  gd2                          String?
+  gd3                          String?
+  gd4                          String?
+  compressor_running_hour      String?
+  fit1_current_flow            String?
+  fit1_total                   String?
+  fit2_current_flow            String?
+  fit2_total                   String?
+  fit3_current_flow            String?
+  fit3_total                   String?
+  station_inlet_pressure       String?
+  final_suction_pressure       String?
+  priority_pressure            String?
+}
+
+model chhatrashal_gas_flow_readings {
+  id                    BigInt  @id @default(autoincrement())
+  transaction_number    String?
+  date_time             String?
+  equipment_name        String?
+  station_name          String?
+  station_suction_flow  String?
+  station_suction_total String?
+}
+
+model chhatrashal_kpcl_compressor_readings {
+  id                           BigInt  @id @default(autoincrement())
+  reading_number               String?
+  date_time                    String?
+  equipment_name               String?
+  station_name                 String?
+  bdv_pressure                 String?
+  stage1_suction_pressure      String?
+  stage1_discharge_pressure    String?
+  stage2_discharge_pressure    String?
+  stage3_discharge_pressure    String?
+  compressor_oil_pressure      String?
+  priority_inlet_1             String?
+  priority_inlet_2             String?
+  stage1_suction_temp          String?
+  stage1_discharge_temp        String?
+  stage2_suction_temp          String?
+  stage2_discharge_temp        String?
+  stage3_suction_temp          String?
+  stage3_discharge_temp        String?
+  after_cooler_temp            String?
+  compressor_lube_oil_pressure String?
+  gd101                        String?
+  gd102                        String?
+  compressor_suction_flow      String?
+  compressor_suction_total     String?
+  compressor_discharge_total   String?
+  compressor_run_hour          String?
+  voltage_a                    String?
+  voltage_b                    String?
+  voltage_c                    String?
+  current_a                    String?
+  current_b                    String?
+  current_c                    String?
+  frequency                    String?
+  station_inlet_pressure       String?
+  final_suction_pressure       String?
+  priority_pressure            String?
+}
+
+model delta_compressor_readings {
+  id                           BigInt  @id(map: "delta_compressor_redings_pkey") @default(autoincrement())
+  reading_number               String?
+  date_time                    String?
+  equipment_name               String?
+  station_name                 String?
+  pipeline_pressure            String?
+  inlet_pressure               String?
+  stage1_discharge_pressure    String?
+  stage2_discharge_pressure    String?
+  stage3_discharge_pressure    String?
+  storage_pressure             String?
+  storage_bus_pressure         String?
+  stage1_lubrication_pressure  String?
+  carter_oil_pressure          String?
+  stage1_discharge_temperature String?
+  stage2_discharge_temperature String?
+  storage_out_temperature      String?
+  carter_oil_temperature       String?
+  gas_detector_gd1             String?
+  gas_detector_gd2             String?
+  running_hour                 String?
+  station_inlet_pressure       String?
+  suction_pressure             String?
+  priority_pressure            String?
+}
+
+model dispenser_readings {
+  id                 BigInt  @id @default(autoincrement())
+  transaction_number String?
+  station_name       String?
+  date_time          String?
+  start_date_time    String?
+  end_date_time      String?
+  fill_time          String?
+  serial_number      String?
+  side               String?
+  unit_price         String?
+  quantity           String?
+  amount             String?
+  start_pressure     String?
+  end_pressure       String?
+  temperature        String?
+  total              String?
+  eos                String?
+}
+
+model icl_compressor_readings {
+  id                          BigInt  @id @default(autoincrement())
+  reading_number              String?
+  date_time                   String?
+  equipment_name              String?
+  station_name                String?
+  gas_inlate_pressure         String?
+  water_pressure              String?
+  high_bank_pressure          String?
+  medium_bank_pressure        String?
+  low_bank_pressure           String?
+  gas_temp                    String?
+  oil_temp                    String?
+  water_temp                  String?
+  water_temperature_unit_1    String?
+  run_hour                    String?
+  run_min                     String?
+  active_power_kw             String?
+  line_to_line_avrage_voltage String?
+  line_to_neutral_voltage     String?
+  current_average             String?
+  frequency                   String?
+  voltage_phase_1_to_phase_2  String?
+  voltage_phase_1             String?
+  current_phase_1             String?
+  voltage_phase_2_to_phase_3  String?
+  voltage_phase_2_to_neutral  String?
+  current_phase_2             String?
+  voltage_phase_3_to_phase_1  String?
+  voltage_phase_3_to_neutral  String?
+  current_phase_3             String?
+  fwd_active_energy           String?
+  discharge_flow_rate         String?
+  discharge_total             String?
+  power_factore               String?
+  suction_flow_rate           String?
+  suction_total               String?
+  station_inlet_pressure      String?
+  final_suction_pressure      String?
+  priority_pressure           String?
+}
+
+model kapashera_gas_flow_readings {
+  id                    BigInt  @id(map: "gas_flow_readings_pkey") @default(autoincrement())
+  transaction_number    String?
+  date_time             String?
+  equipment_name        String?
+  station_name          String?
+  station_suction_flow  String?
+  station_suction_total String?
+  lcv_flow              String?
+  lcv_total             String?
+}
+
+model sgtn2_gas_flow_readings {
+  id                    BigInt  @id @default(autoincrement())
+  transaction_number    String?
+  date_time             String?
+  equipment_name        String?
+  station_name          String?
+  station_suction_flow  String?
+  station_suction_total String?
+}
+
+model sgtn2_kpcl_compressor_readings {
+  id                           BigInt  @id(map: "kpcl_compressor_readings_pkey") @default(autoincrement())
+  reading_number               String?
+  date_time                    String?
+  equipment_name               String?
+  station_name                 String?
+  bdv_pressure                 String?
+  stage1_suction_pressure      String?
+  stage1_discharge_pressure    String?
+  stage2_discharge_pressure    String?
+  stage3_discharge_pressure    String?
+  compressor_oil_pressure      String?
+  priority_inlet_1             String?
+  priority_inlet_2             String?
+  stage1_suction_temp          String?
+  stage1_discharge_temp        String?
+  stage2_suction_temp          String?
+  stage2_discharge_temp        String?
+  stage3_suction_temp          String?
+  stage3_discharge_temp        String?
+  after_cooler_temp            String?
+  compressor_lube_oil_pressure String?
+  gd101                        String?
+  gd102                        String?
+  compressor_suction_flow      String?
+  compressor_suction_total     String?
+  compressor_discharge_total   String?
+  compressor_run_hour          String?
+  voltage_a                    String?
+  voltage_b                    String?
+  voltage_c                    String?
+  current_a                    String?
+  current_b                    String?
+  current_c                    String?
+  frequency                    String?
+  forward_active_energy        String?
+  station_inlet_pressure       String?
+  final_suction_pressure       String?
+  priority_pressure            String?
+}
+
+model shri_shakti_gas_flow_readings {
+  id                    BigInt  @id @default(autoincrement())
+  transaction_number    String?
+  date_time             String?
+  equipment_name        String?
+  station_name          String?
+  station_suction_flow  String?
+  station_suction_total String?
+}
+
+model tulip_compressor_readings {
+  id                           BigInt  @id(map: "tulip_compressor_redings_pkey") @default(autoincrement())
+  reading_number               String?
+  date_time                    String?
+  equipment_name               String?
+  station_name                 String?
+  suction_pressure             String?
+  stage1_discharge_pressure    String?
+  stage2_discharge_pressure    String?
+  stage3_discharge_pressure    String?
+  car_dispenser_priority       String?
+  bus_dispenser_priority       String?
+  mobile_cascade_priority      String?
+  compressor_lube_oil_pressure String?
+  suction_temp                 String?
+  stage1_discharge_temp        String?
+  stage2_discharge_temp        String?
+  stage3_discharge_temp        String?
+  after_cooler                 String?
+  fd1                          String?
+  fd2                          String?
+  fd3                          String?
+  fd4                          String?
+  gd1                          String?
+  gd2                          String?
+  gd3                          String?
+  gd4                          String?
+  comp_running_hour            String?
+  suction_flow                 String?
+  suction_totalizer            String?
+  discharge_flow               String?
+  discharge_totalizer          String?
+  engine_flow                  String?
+  engine_totalizer             String?
+  eng_lub_oil_pressure         String?
+  bdv_pressure                 String?
+  eng_aux_cool_temp            String?
+  eng_jkt_cool_temp            String?
+  eng_lub_oil_temp             String?
+  eng_exhaust_temp             String?
+  eng_rpm                      String?
+  station_inlet_pressure       String?
+  final_suction_pressure       String?
+  priority_pressure            String?
+}
+
+model account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime? @db.Timestamptz(6)
+  refreshTokenExpiresAt DateTime? @db.Timestamptz(6)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime  @default(now()) @db.Timestamptz(6)
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId])
+}
+
+model session {
+  id        String   @id
+  expiresAt DateTime @db.Timestamptz(6)
+  token     String   @unique
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @db.Timestamptz(6)
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId])
+}
+
+model user {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @default(now()) @db.Timestamptz(6)
+  account       account[]
+  session       session[]
+}
+
+model verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([identifier])
+}
