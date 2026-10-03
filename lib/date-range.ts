@@ -39,3 +39,17 @@ export function resolveDateRange(
   const from = addDays(bounds.latest, -(days - 1))
   return { from: from < bounds.earliest ? bounds.earliest : from, to: bounds.latest }
 }
+
+// The period of the same length that ends the day before `range` starts.
+// Used to compare "this period" with "the previous period".
+export function getPreviousRange(range: DateRange): DateRange {
+  const millisecondsPerDay = 86_400_000
+  const dayCount =
+    Math.round(
+      (new Date(`${range.to}T00:00:00Z`).getTime() -
+        new Date(`${range.from}T00:00:00Z`).getTime()) /
+        millisecondsPerDay
+    ) + 1
+
+  return { from: addDays(range.from, -dayCount), to: addDays(range.from, -1) }
+}

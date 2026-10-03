@@ -14,23 +14,23 @@ import { CHART_COLORS } from "@/lib/chart-colors"
 import { formatDate, formatInteger, formatShortDate } from "@/lib/format"
 
 const chartConfig = {
-  minutes: { label: "This period", color: CHART_COLORS.critical },
-  previousMinutes: { label: "Previous period", color: CHART_COLORS.previous },
+  vehicles: { label: "This period", color: CHART_COLORS.primary },
+  previousVehicles: { label: "Previous period", color: CHART_COLORS.previous },
 } satisfies ChartConfig
 
-type OutageChartProps = {
-  data: { day: string; minutes: number; previousMinutes: number | null }[]
+type VehiclesTrendChartProps = {
+  data: { day: string; vehicles: number; previousVehicles: number | null }[]
   hasComparison: boolean
 }
 
-export function OutageChart({ data, hasComparison }: OutageChartProps) {
+export function VehiclesTrendChart({ data, hasComparison }: VehiclesTrendChartProps) {
   return (
     <ChartContainer config={chartConfig} className="aspect-auto h-64 w-full">
       <AreaChart data={data} accessibilityLayer>
         <defs>
-          <linearGradient id="outageFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="var(--color-minutes)" stopOpacity={0.35} />
-            <stop offset="95%" stopColor="var(--color-minutes)" stopOpacity={0.02} />
+          <linearGradient id="overviewVehiclesFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="var(--color-vehicles)" stopOpacity={0.35} />
+            <stop offset="95%" stopColor="var(--color-vehicles)" stopOpacity={0.02} />
           </linearGradient>
         </defs>
         <CartesianGrid vertical={false} />
@@ -60,9 +60,9 @@ export function OutageChart({ data, hasComparison }: OutageChartProps) {
         {hasComparison && <ChartLegend content={<ChartLegendContent />} />}
         {hasComparison && (
           <Area
-            dataKey="previousMinutes"
+            dataKey="previousVehicles"
             type="monotone"
-            stroke="var(--color-previousMinutes)"
+            stroke="var(--color-previousVehicles)"
             strokeDasharray="4 4"
             strokeWidth={1.5}
             fill="none"
@@ -70,11 +70,11 @@ export function OutageChart({ data, hasComparison }: OutageChartProps) {
           />
         )}
         <Area
-          dataKey="minutes"
+          dataKey="vehicles"
           type="monotone"
-          stroke="var(--color-minutes)"
+          stroke="var(--color-vehicles)"
           strokeWidth={2}
-          fill="url(#outageFill)"
+          fill="url(#overviewVehiclesFill)"
           dot={false}
         />
       </AreaChart>

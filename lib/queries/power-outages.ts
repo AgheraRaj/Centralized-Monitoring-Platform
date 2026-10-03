@@ -16,6 +16,12 @@ type OutageSummaryRow = {
 
 type DailyOutageRow = { day: string; minutes: number; outages: number }
 
+type StationOutageRow = {
+  station: string
+  outages: number
+  totalMinutes: number
+}
+
 type OutageEventRow = {
   station: string
   startedAt: string
@@ -104,5 +110,25 @@ export async function getLatestOutages(params: {
       ${stationCondition(station)}
     ORDER BY started_at DESC
     LIMIT 50
+  `)
+}
+
+// Estimated outages and downtime per station, longest downtime first.
+export async function getOutagesByStation(params: {
+  station: StationFilter
+  range: DateRange
+}): Promise<StationOutageRow[]> {
+  const { station, range } = params
+
+  return prisma.$queryRaw<StationOutageRow[]>(Prisma.sql`
+    SELECT
+      station_name AS station,
+      COUNT(*)::int AS outages,
+      COALESCE(SUM(duration_minutes), 0)::int AS "totalMinutes"
+    FROM mv_power_outages
+    WHERE ${rangeCondition(range)}
+      ${stationCondition(station)}
+    GROUP BY station_name
+    ORDER BY "totalMinutes" DESC
   `)
 }

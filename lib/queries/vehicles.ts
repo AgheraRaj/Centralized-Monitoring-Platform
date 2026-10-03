@@ -84,3 +84,30 @@ export async function getStationSummary(
     ORDER BY vehicles DESC
   `
 }
+type VehicleClassRow = { small: number; car: number; heavy: number }
+
+// Vehicle type is guessed from the gas filled:
+// Auto / small: up to 4 kg, Car: over 4 up to 12 kg, Bus / heavy: over 12 kg.
+export async function getVehicleClassCounts(params: {
+  station: StationFilter
+  range: DateRange
+}): Promise<VehicleClassRow> {
+  const { station, range } = params
+  const stationCondition =
+    station === ALL_STATIONS
+      ? Prisma.empty
+      : Prisma.sql`AND station_name = ${station}`
+
+  const [row] = await prisma.$queryRaw<VehicleClassRow[]>(Prisma.sql`
+    SELECT
+      COUNT(*) FILTER (WHERE quantity_kg <= 4)::int AS small,
+      COUNT(*) FILTER (WHERE quantity_kg > 4 AND quantity_kg <= 12)::int AS car,
+      COUNT(*) FILTER (WHERE quantity_kg > 12)::int AS heavy
+    FROM mv_dispenser_fills
+    WHERE ended_at >= ${range.from}::date
+      AND ended_at < ${range.to}::date + 1
+      ${stationCondition}
+  `)
+
+  return row ?? { small: 0, car: 0, heavy: 0 }
+}

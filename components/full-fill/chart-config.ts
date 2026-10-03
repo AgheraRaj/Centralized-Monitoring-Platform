@@ -1,15 +1,16 @@
 import type { ChartConfig } from "@/components/ui/chart"
+import { CHART_COLORS } from "@/lib/chart-colors"
 import { FULL_FILL_THRESHOLD_BAR } from "@/lib/full-fill"
 
-// Fixed colours (green = full, amber = below target) so the meaning stays the same in any theme.
-// Shared by every chart on the Full-fill page.
+// Green = full, amber = below target, in every theme.
+// Shared by every full-fill chart (Full-fill page and Overview).
 export const fullFillChartConfig = {
   fullFills: {
     label: `At or above ${FULL_FILL_THRESHOLD_BAR} bar`,
-    color: "oklch(0.620 0.190 255.0)",
+    color: CHART_COLORS.good,
   },
   belowFills: {
     label: `Below ${FULL_FILL_THRESHOLD_BAR} bar`,
-    color: "oklch(0.700 0.150 230.0)",
+    color: CHART_COLORS.warning,
   },
 } satisfies ChartConfig

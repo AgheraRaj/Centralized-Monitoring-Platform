@@ -26,7 +26,7 @@ export function VehicleClassChart({ data }: VehicleClassChartProps) {
         <YAxis
           tickLine={false}
           axisLine={false}
-          width={44}
+          width="auto"
           allowDecimals={false}
           tickFormatter={formatInteger}
         />

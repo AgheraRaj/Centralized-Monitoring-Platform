@@ -16,7 +16,7 @@ export function AppHeader() {
   )?.title
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 bg-background px-4">
+    <header className="flex h-14 shrink-0 items-center gap-2 bg-background px-4 border-b">
       <SidebarTrigger />
       <Separator orientation="vertical" className="h-4 mt-5 mr-2" />
 
