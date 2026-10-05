@@ -46,23 +46,39 @@ export function AppSidebar({ userName, userEmail }: AppSidebarProps) {
             <SidebarMenuButton
               size="lg"
               render={
-                <Link href={`/dashboard${query}`} onClick={closeMobileDrawer} />
+                <Link
+                  href={`/dashboard${query}`}
+                  aria-label="Altrex home"
+                  onClick={closeMobileDrawer}
+                />
               }
             >
-              <div className="relative flex aspect-square size-8 items-center justify-center">
+              <div className="relative hidden size-6 ml-1 shrink-0 group-data-[collapsible=icon]:block">
                 <Image
                   src="/logo.png"
-                  alt="Centralized Monitoring Platform logo"
+                  alt=""
                   fill
-                  sizes="32px"
+                  sizes="24px"
                   className="object-contain"
                 />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">CMP</span>
-                <span className="truncate text-xs text-sidebar-foreground/70">
-                  Centralized Monitoring Platform
-                </span>
+              <div className="relative h-[30px] w-[150px] shrink-0 group-data-[collapsible=icon]:hidden">
+                <Image
+                  src="/AltrexLogo-light-mode.png"
+                  alt=""
+                  width={150}
+                  height={30}
+                  sizes="150px"
+                  className="h-full w-full object-contain dark:hidden"
+                />
+                <Image
+                  src="/AltrexLogo-dark-mode.png"
+                  alt=""
+                  width={150}
+                  height={30}
+                  sizes="150px"
+                  className="hidden h-full w-full object-contain dark:block"
+                />
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
