@@ -1,20 +1,12 @@
+import { BreakdownTable } from "@/components/full-fill/breakdown-table"
 import { DashboardPanel } from "@/components/dashboard-panel"
 import { FullFillChart } from "@/components/full-fill/full-fill-chart"
 import { VehicleClassChart } from "@/components/full-fill/vehicle-class-chart"
 import { ChangeBadge } from "@/components/overview/change-badge"
 import { KpiStrip, type Metric } from "@/components/overview/kpi-strip"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { HeroPanel } from "@/components/vehicles/hero-panel"
 import { PageHeader } from "@/components/vehicles/page-header"
 import { RateTrendChart } from "@/components/vehicles/rate-trend-chart"
-import { CHART_COLORS } from "@/lib/chart-colors"
 import { getDashboardFilters } from "@/lib/dashboard-filters"
 import {
   formatDate,
@@ -38,7 +30,7 @@ import {
   getFullFillByVehicleClass,
   getUnmeasuredFillCount,
 } from "@/lib/queries/full-fill"
-import { getFillDateBounds } from "@/lib/queries/vehicles"
+import { getDailyVehicles, getFillDateBounds } from "@/lib/queries/vehicles"
 import { requireSession } from "@/lib/session"
 import { ALL_STATIONS, getStationName } from "@/lib/stations"
 
@@ -96,6 +88,7 @@ export default async function FullFillPage({ searchParams }: FullFillPageProps) 
     breakdown,
     vehicleClassFills,
     unmeasuredFills,
+    dailyVehicles,
   ] = await Promise.all([
     getDailyFullFill({ station, range }),
     previousRange
@@ -104,12 +97,15 @@ export default async function FullFillPage({ searchParams }: FullFillPageProps) 
     getFullFillBreakdown({ station, range }),
     getFullFillByVehicleClass({ station, range }),
     getUnmeasuredFillCount({ station, range }),
+    getDailyVehicles({ station, range }),
   ])
 
   // ---- totals and comparison with the previous period
   const fullFills = sumOf(dailyFullFill, (day) => day.fullFills)
   const belowFills = sumOf(dailyFullFill, (day) => day.belowFills)
   const measuredFills = fullFills + belowFills
+  const totalKg = sumOf(dailyVehicles, (day) => day.kg)
+  const totalVehicles = sumOf(dailyVehicles, (day) => day.vehicles)
   const rate = rateOfDays(dailyFullFill)
   const previousRate = previousDailyFullFill ? rateOfDays(previousDailyFullFill) : null
   const averageEndPressure =
@@ -126,11 +122,11 @@ export default async function FullFillPage({ searchParams }: FullFillPageProps) 
     .filter((day) => measuredIn(day) >= minimumFills)
     .map((day) => ({ day: day.day, rate: (day.fullFills / measuredIn(day)) * 100 }))
   const bestDay = dayRates.reduce<(typeof dayRates)[number] | null>(
-    (best, day) => (best === null || day.rate > best.rate ? day : best),
+    (best, day) => (best === null || day.rate >= best.rate ? day : best),
     null
   )
   const lowestDay = dayRates.reduce<(typeof dayRates)[number] | null>(
-    (lowest, day) => (lowest === null || day.rate < lowest.rate ? day : lowest),
+    (lowest, day) => (lowest === null || day.rate <= lowest.rate ? day : lowest),
     null
   )
 
@@ -138,12 +134,20 @@ export default async function FullFillPage({ searchParams }: FullFillPageProps) 
     {
       label: `At or above ${FULL_FILL_THRESHOLD_BAR} bar`,
       value: formatInteger(fullFills),
+      unit: "vehicles",
       note: rate === null ? undefined : `${formatPercent(rate)} of measured fills`,
     },
     {
       label: `Below ${FULL_FILL_THRESHOLD_BAR} bar`,
       value: formatInteger(belowFills),
+      unit: "vehicles",
       note: rate === null ? undefined : `${formatPercent(100 - rate)} of measured fills`,
+    },
+    {
+      label: "Gas dispensed",
+      value: formatInteger(totalKg),
+      unit: "kg",
+      note: `Across ${formatInteger(totalVehicles)} vehicles`,
     },
     {
       label: "Average end pressure",
@@ -151,12 +155,12 @@ export default async function FullFillPage({ searchParams }: FullFillPageProps) 
       unit: "bar",
     },
     {
-      label: "Best day",
+      label: "Last best day",
       value: bestDay ? formatPercent(bestDay.rate) : "--",
       note: bestDay ? formatDate(bestDay.day) : undefined,
     },
     {
-      label: "Lowest day",
+      label: "Last lowest day",
       value: lowestDay ? formatPercent(lowestDay.rate) : "--",
       note: lowestDay ? formatDate(lowestDay.day) : undefined,
     },
@@ -185,11 +189,11 @@ export default async function FullFillPage({ searchParams }: FullFillPageProps) 
           )
         }
         chips={[
-          `${formatInteger(fullFills)} full fills`,
-          `${formatInteger(belowFills)} below ${FULL_FILL_THRESHOLD_BAR} bar`,
+          `${formatInteger(fullFills)} full-fill vehicles`,
+          `${formatInteger(belowFills)} vehicles below ${FULL_FILL_THRESHOLD_BAR} bar`,
           averageEndPressure === null
-            ? "Average pressure --"
-            : `${formatDecimal(averageEndPressure)} bar average`,
+            ? "Average end pressure --"
+            : `${formatDecimal(averageEndPressure)} bar average end pressure`,
         ]}
         footer={`${stationLabel} · ${formatDate(range.from)} to ${formatDate(range.to)}`}
         chartTitle="Full-fill rate per day"
@@ -232,47 +236,15 @@ export default async function FullFillPage({ searchParams }: FullFillPageProps) 
       </div>
 
       <DashboardPanel title={isByStation ? "By station" : "By dispenser"}>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{isByStation ? "Station" : "Dispenser"}</TableHead>
-              <TableHead className="text-right">Fills</TableHead>
-              <TableHead className="text-right">Full-fill rate</TableHead>
-              <TableHead className="text-right">Avg end pressure (bar)</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {breakdown.map((row) => {
-              const rowRate = percentOf(row.fullFills, row.fills) ?? 0
-              return (
-                <TableRow key={row.label}>
-                  <TableCell className="font-medium">
-                    {isByStation ? getStationName(row.label) : row.label}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatInteger(row.fills)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-foreground/10">
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${rowRate}%`, backgroundColor: CHART_COLORS.good }}
-                        />
-                      </div>
-                      <span className="w-14 text-right tabular-nums">
-                        {formatPercent(rowRate)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatDecimal(row.averageEndPressure)}
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
+        <BreakdownTable
+          firstColumnLabel={isByStation ? "Station" : "Dispenser"}
+          rows={breakdown.map((row) => ({
+            label: isByStation ? getStationName(row.label) : row.label,
+            fills: row.fills,
+            rate: percentOf(row.fullFills, row.fills) ?? 0,
+            averageEndPressure: row.averageEndPressure,
+          }))}
+        />
       </DashboardPanel>
     </div>
   )
