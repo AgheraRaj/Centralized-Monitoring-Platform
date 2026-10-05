@@ -47,23 +47,30 @@ export function LoginForm() {
 
   return (
     <Card className="w-full max-w-sm">
-      <CardHeader className="flex items-center gap-4">
-        {/* `fill` + object-contain keeps the logo's own shape inside the box. */}
-        <div className="relative size-12 shrink-0">
+      <CardHeader className="flex flex-col gap-4">
+        <div className="relative h-[30px] w-[170px] shrink-0">
           <Image
-            src="/logo.png"
-            alt="Centralized Monitoring Platform logo"
-            fill
-            sizes="48px"
+            src="/AltrexLogo-light-mode.png"
+            alt="Altrex logo"
+            width={170}
+            height={30}
+            sizes="170px"
             loading="eager"
-            className="object-contain"
+            className="h-full w-full object-contain dark:hidden"
+          />
+          <Image
+            src="/AltrexLogo-dark-mode.png"
+            alt="Altrex logo"
+            width={170}
+            height={30}
+            sizes="170px"
+            loading="eager"
+            className="hidden h-full w-full object-contain dark:block"
           />
         </div>
-        <div className="flex flex-col gap-1">
-          <CardTitle>CRM</CardTitle>
-          <CardDescription>
-            Sign in to continue
-          </CardDescription>
+        <div className="flex flex-col gap-1 pt-1">
+          <CardTitle>Centralized Monitoring Platform</CardTitle>
+          <CardDescription>Sign in to access the monitoring platform</CardDescription>
         </div>
       </CardHeader>
       <CardContent>

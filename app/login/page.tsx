@@ -12,8 +12,8 @@ export default async function LoginPage() {
   }
 
   return (
-    <main className="relative grid min-h-svh place-items-center p-4">
-      <div className="absolute right-4 top-4">
+    <main className="relative grid min-h-svh place-items-center overflow-hidden">
+      <div className="absolute right-4 top-4 z-20">
         <ThemeToggle />
       </div>
       <LoginForm />
