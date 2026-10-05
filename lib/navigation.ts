@@ -4,6 +4,7 @@ import {
   Fuel,
   LayoutDashboard,
   Gauge,
+  MapPin,
   Zap,
   type LucideIcon,
 } from "lucide-react"
@@ -18,6 +19,7 @@ export type NavigationItem = {
 // The sidebar and the header title both read from this list.
 export const NAVIGATION_ITEMS: NavigationItem[] = [
   { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { title: "Map view", href: "/map", icon: MapPin },
   { title: "Daily vehicles", href: "/vehicles", icon: Car },
   { title: "Full-fill rate", href: "/full-fill", icon: Fuel },
   { title: "Station uptime", href: "/uptime", icon: Activity },
