@@ -15,7 +15,7 @@ import { getDispenserSummary } from "@/lib/queries/dispensers"
 import { getDispenserDetails } from "@/lib/queries/map"
 import { getStationDownHours, getStationUptime } from "@/lib/queries/uptime"
 import { requireSession } from "@/lib/session"
-import { ALL_STATIONS, STATIONS } from "@/lib/stations"
+import { ALL_STATIONS, STATIONS, type StationFilter } from "@/lib/stations"
 import { STATION_LOCATIONS } from "@/lib/station-locations"
 import { getUptimeTone } from "@/lib/uptime-status"
 
@@ -56,7 +56,7 @@ export default async function MapPage({ searchParams }: MapPageProps) {
   }
 
   const { range } = filters
-  const all = { station: ALL_STATIONS, range }
+  const all = { station: ALL_STATIONS as StationFilter, range }
 
   const [uptimeRows, downRows, summaryRows, dispenserRows] = await Promise.all([
     settle("uptime", getStationUptime(all), []),
