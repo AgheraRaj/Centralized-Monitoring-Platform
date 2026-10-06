@@ -29,7 +29,7 @@ type StationDrawerProps = {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+      <h3 className="text-xs font-semibold tracking-wide uppercase">
         {title}
       </h3>
       {children}
