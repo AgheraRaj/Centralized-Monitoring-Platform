@@ -7,11 +7,11 @@ import { StationSelector } from "@/components/station-selector"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { isActiveNavigationItem, NAVIGATION_ITEMS } from "@/lib/navigation"
+import { FLAT_NAVIGATION_LINKS, isActiveNavigationItem } from "@/lib/navigation"
 
 export function AppHeader() {
   const pathname = usePathname()
-  const pageTitle = NAVIGATION_ITEMS.find((item) =>
+  const pageTitle = FLAT_NAVIGATION_LINKS.find((item) =>
     isActiveNavigationItem(pathname, item)
   )?.title
 

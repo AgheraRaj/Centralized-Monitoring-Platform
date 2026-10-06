@@ -235,7 +235,10 @@ export default async function FullFillPage({ searchParams }: FullFillPageProps) 
         </DashboardPanel>
       </div>
 
-      <DashboardPanel title={isByStation ? "By station" : "By dispenser"}>
+      <DashboardPanel
+        title={isByStation ? "By station" : "By dispenser"}
+        description={`Full-fill rate is the share of measured fills that ended at or above ${FULL_FILL_THRESHOLD_BAR} bar, and the bar shows that share. Fills with a missing or impossible end pressure are left out. Click a column heading to sort.`}
+      >
         <BreakdownTable
           firstColumnLabel={isByStation ? "Station" : "Dispenser"}
           rows={breakdown.map((row) => ({

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 
+import { AppFooter } from "@/components/app-footer"
 import { AppHeader } from "@/components/app-header"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -20,12 +21,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <SidebarProvider className={`${DARK_SIDEBAR_SURFACE} h-svh overflow-hidden`}>
       <AppSidebar userName={session.user.name} userEmail={session.user.email} />
       {/* The page itself never scrolls. Only the content area below the header does,
-          so the rounded panel and its header stay in place. */}
+          so the rounded panel, its header and the footer stay in place. */}
       <SidebarInset className="min-h-0! overflow-hidden">
         <AppHeader />
         <div className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]">
           {children}
         </div>
+        <AppFooter />
       </SidebarInset>
     </SidebarProvider>
   )

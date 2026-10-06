@@ -8,6 +8,8 @@ export type VehicleClassItem = {
   label: string
   rule: string
   count: number
+  // Gas dispensed to this type of vehicle, in kg.
+  kg: number
   color: string
   change?: ReactNode
 }
@@ -43,6 +45,10 @@ export function VehicleClassCard({ items }: { items: VehicleClassItem[] }) {
                   {formatInteger(share)}% of vehicles
                 </span>
               </div>
+              <p className="text-sm tabular-nums">
+                <span className="font-medium">{formatInteger(item.kg)} kg</span>{" "}
+                <span className="text-muted-foreground">gas dispensed</span>
+              </p>
               <div className="h-1.5 overflow-hidden rounded-full bg-foreground/10">
                 <div
                   className="h-full rounded-full"

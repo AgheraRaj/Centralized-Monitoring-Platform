@@ -28,11 +28,12 @@ import {
   getDailyVehicles,
   getFillDateBounds,
   getStationSummary,
+  getDailyVehicleClasses,
   getVehicleClassCounts,
 } from "@/lib/queries/vehicles"
 import { requireSession } from "@/lib/session"
 import { ALL_STATIONS, getStationName } from "@/lib/stations"
-import { buildWeekdayAverages } from "@/lib/weekday-averages"
+import { buildWeekdayClassAverages } from "@/lib/weekday-averages"
 
 type VehiclesPageProps = {
   searchParams: Promise<{ station?: string; range?: string }>
@@ -71,6 +72,7 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
     stationSummary,
     classCounts,
     previousClassCounts,
+    dailyClasses,
   ] =
     await Promise.all([
       getDailyVehicles({ station, range }),
@@ -83,6 +85,7 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
       previousRange
         ? getVehicleClassCounts({ station, range: previousRange })
         : Promise.resolve(null),
+      getDailyVehicleClasses({ station, range }),
     ])
 
   // ---- totals and comparison with the previous period
@@ -225,6 +228,7 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
           label: item.label,
           rule: item.rule,
           count: classCounts[item.key],
+          kg: classCounts[`${item.key}Kg`],
           color: VEHICLE_CLASS_COLORS[index],
           change: hasComparison && previousClassCounts && (
             <ChangeBadge
@@ -238,9 +242,9 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
       <div className="grid gap-4 xl:grid-cols-2">
         <DashboardPanel
           title="Average by weekday"
-          description="Average vehicles on days with fills"
+          description="Average vehicles on days with fills, split by vehicle type"
         >
-          <WeekdayChart data={buildWeekdayAverages(dailyVehicles)} />
+          <WeekdayChart data={buildWeekdayClassAverages(dailyClasses)} />
         </DashboardPanel>
 
         <StationRankingCard

@@ -48,28 +48,28 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className="flex flex-col gap-4">
-        <div className="relative h-[30px] w-[170px] shrink-0">
+        <div className="relative h-[25px] w-[125px] shrink-0">
           <Image
             src="/AltrexLogo-light-mode.png"
             alt="Altrex logo"
-            width={170}
-            height={30}
-            sizes="170px"
+            width={125}
+            height={25}
+            sizes="125px"
             loading="eager"
             className="h-full w-full object-contain dark:hidden"
           />
           <Image
             src="/AltrexLogo-dark-mode.png"
             alt="Altrex logo"
-            width={170}
-            height={30}
-            sizes="170px"
+            width={125}
+            height={25}
+            sizes="125px"
             loading="eager"
             className="hidden h-full w-full object-contain dark:block"
           />
         </div>
         <div className="flex flex-col gap-1 pt-1">
-          <CardTitle>Centralized Monitoring Platform</CardTitle>
+          <CardTitle>Login to CMP</CardTitle>
           <CardDescription>Sign in to access the monitoring platform</CardDescription>
         </div>
       </CardHeader>

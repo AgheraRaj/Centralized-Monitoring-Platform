@@ -1,14 +1,7 @@
 import { DashboardPanel } from "@/components/dashboard-panel"
 import { ChangeBadge } from "@/components/overview/change-badge"
 import { KpiStrip, type Metric } from "@/components/overview/kpi-strip"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { SortableTable, type SortableRow } from "@/components/sortable-table"
 import { HeroPanel } from "@/components/vehicles/hero-panel"
 import { PageHeader } from "@/components/vehicles/page-header"
 import { RateTrendChart } from "@/components/vehicles/rate-trend-chart"
@@ -136,6 +129,29 @@ export default async function CapacityPage({ searchParams }: CapacityPageProps) 
     null
   )
 
+  const tableRows: SortableRow[] = stationRows.map((row) => ({
+    id: row.station,
+    cells: {
+      station: { text: getStationName(row.station), sort: getStationName(row.station) },
+      utilization: {
+        text: row.utilization === null ? "--" : formatPercent(row.utilization),
+        sort: row.utilization ?? -1,
+        percent: row.utilization ?? 0,
+        color: CHART_COLORS.primary,
+      },
+      dispensers: { text: formatInteger(row.dispensers), sort: row.dispensers },
+      capacityPerHour: {
+        text: formatInteger(row.capacityKgPerHour),
+        sort: row.capacityKgPerHour,
+      },
+      ratedPerDay: { text: formatInteger(row.ratedKgPerDay), sort: row.ratedKgPerDay },
+      averageSales: {
+        text: formatInteger(row.averageDailyKg),
+        sort: row.averageDailyKg,
+      },
+    },
+  }))
+
   const metrics: Metric[] = [
     {
       label: "Dispensers",
@@ -173,7 +189,7 @@ export default async function CapacityPage({ searchParams }: CapacityPageProps) 
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title="Dispenser capacity & utilization"
+        title="Dispenser utilization"
         stationLabel={stationLabel}
         range={range}
         note="Rated capacity = dispensers × kg per hour × 24 hours. Utilization is the average daily gas sold divided by that capacity. Only days with fills are averaged."
@@ -212,55 +228,19 @@ export default async function CapacityPage({ searchParams }: CapacityPageProps) 
 
       <DashboardPanel
         title={station === ALL_STATIONS ? "By station" : "Station detail"}
-        description="Bar shows average daily sales as a share of rated capacity."
+        description="Bar shows average daily sales as a share of rated capacity. Click a column heading to sort."
       >
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Station</TableHead>
-              <TableHead className="text-right">Utilization</TableHead>
-              <TableHead className="text-right">Dispensers</TableHead>
-              <TableHead className="text-right">Rated kg/hr each</TableHead>
-              <TableHead className="text-right">Rated kg/day</TableHead>
-              <TableHead className="text-right">Avg daily sales (kg)</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {stationRows.map((row) => (
-              <TableRow key={row.station}>
-                <TableCell className="font-medium">{getStationName(row.station)}</TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-2">
-                    <div className="h-1.5 w-20 overflow-hidden rounded-full bg-foreground/10">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${Math.min(row.utilization ?? 0, 100)}%`,
-                          backgroundColor: CHART_COLORS.primary,
-                        }}
-                      />
-                    </div>
-                    <span className="w-14 text-right tabular-nums">
-                      {row.utilization === null ? "--" : formatPercent(row.utilization)}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatInteger(row.dispensers)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatInteger(row.capacityKgPerHour)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatInteger(row.ratedKgPerDay)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatInteger(row.averageDailyKg)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <SortableTable
+          columns={[
+            { key: "station", label: "Station", align: "left" },
+            { key: "utilization", label: "Utilization" },
+            { key: "dispensers", label: "Dispensers" },
+            { key: "capacityPerHour", label: "Rated kg/hr each" },
+            { key: "ratedPerDay", label: "Rated kg/day" },
+            { key: "averageSales", label: "Avg daily sales (kg)" },
+          ]}
+          rows={tableRows}
+        />
       </DashboardPanel>
     </div>
   )

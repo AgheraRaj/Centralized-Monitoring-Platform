@@ -2,21 +2,14 @@ import { DashboardPanel } from "@/components/dashboard-panel"
 import { ChangeBadge } from "@/components/overview/change-badge"
 import { KpiStrip, type Metric } from "@/components/overview/kpi-strip"
 import { OutageChart } from "@/components/power/outage-chart"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { SortableTable, type SortableRow } from "@/components/sortable-table"
 import { HeroPanel } from "@/components/vehicles/hero-panel"
 import { PageHeader } from "@/components/vehicles/page-header"
 import { CHART_COLORS } from "@/lib/chart-colors"
 import { getDashboardFilters } from "@/lib/dashboard-filters"
-import { formatDate, formatInteger } from "@/lib/format"
+import { formatDate, formatInteger, formatPercent } from "@/lib/format"
 import { formatDuration } from "@/lib/format-duration"
-import { getComparisonRange, relativeChange, sumOf } from "@/lib/overview"
+import { getComparisonRange, pointChange, relativeChange } from "@/lib/overview"
 import {
   getDailyOutages,
   getLatestOutages,
@@ -89,8 +82,18 @@ export default async function PowerPage({ searchParams }: PowerPageProps) {
     (worst, day) => (day.minutes > 0 && (worst === null || day.minutes > worst.minutes) ? day : worst),
     null
   )
-  const averageMinutes = summary.outages > 0 ? summary.totalMinutes / summary.outages : 0
   const worstStation = byStation[0]
+  const lastOutage = latestOutages[0]
+
+  // Share of the period the monitored stations had power.
+  const monitoredCount = isAllStations ? POWER_MONITORED_STATIONS.length : 1
+  const availability = (totalMinutes: number, days: number) =>
+    days > 0 ? Math.max(0, (1 - totalMinutes / (days * 1440 * monitoredCount)) * 100) : null
+  const powerAvailability = availability(summary.totalMinutes, dailyOutages.length)
+  const previousAvailability =
+    previousSummary && previousDailyOutages
+      ? availability(previousSummary.totalMinutes, previousDailyOutages.length)
+      : null
 
   const metrics: Metric[] = [
     {
@@ -109,11 +112,6 @@ export default async function PowerPage({ searchParams }: PowerPageProps) {
       value: formatDuration(summary.longestMinutes),
     },
     {
-      label: "Average outage",
-      value: formatDuration(Math.round(averageMinutes)),
-      note: "Per detected outage",
-    },
-    {
       label: "Days with outages",
       value: formatInteger(daysWithOutage),
       note: `Of ${formatInteger(dailyOutages.length)} days`,
@@ -124,13 +122,57 @@ export default async function PowerPage({ searchParams }: PowerPageProps) {
       note: worstDay ? formatDate(worstDay.day) : "No outages",
     },
     {
-      label: "Fills during outages",
-      value: formatInteger(summary.fillsDuring),
-      note: "Close to 0 if these were real power cuts",
+      label: "Power availability",
+      value: powerAvailability === null ? "--" : formatPercent(powerAvailability),
+      note: "Share of the period with power",
+      change: hasComparison && powerAvailability !== null && (
+        <ChangeBadge change={pointChange(powerAvailability, previousAvailability)} unit="pp" />
+      ),
     },
+    isAllStations
+      ? {
+          label: "Most affected station",
+          value: worstStation ? getStationName(worstStation.station) : "--",
+          note: worstStation
+            ? `${formatDuration(worstStation.totalMinutes)} downtime`
+            : "No outages",
+        }
+      : {
+          label: "Last outage",
+          value: lastOutage ? lastOutage.startedAt.split(",")[0] : "--",
+          note: lastOutage
+            ? `${lastOutage.startedAt.split(",")[1]?.trim()} · ${formatDuration(lastOutage.durationMinutes)}`
+            : "No outages",
+        },
   ]
 
   const largestStationMinutes = Math.max(...byStation.map((row) => row.totalMinutes), 1)
+
+  const stationRows: SortableRow[] = byStation.map((row) => ({
+    id: row.station,
+    cells: {
+      station: { text: getStationName(row.station), sort: getStationName(row.station) },
+      downtime: {
+        text: formatDuration(row.totalMinutes),
+        sort: row.totalMinutes,
+        percent: (row.totalMinutes / largestStationMinutes) * 100,
+        color: CHART_COLORS.critical,
+      },
+      outages: { text: formatInteger(row.outages), sort: row.outages },
+    },
+  }))
+
+  // The query returns newest first, so the position gives the date order.
+  const outageRows: SortableRow[] = latestOutages.map((outage, index) => ({
+    id: `${outage.station}-${outage.startedAt}`,
+    cells: {
+      started: { text: outage.startedAt, sort: latestOutages.length - index },
+      station: { text: getStationName(outage.station), sort: getStationName(outage.station) },
+      duration: { text: formatDuration(outage.durationMinutes), sort: outage.durationMinutes },
+      volts: { text: formatInteger(outage.lowestVolts), sort: outage.lowestVolts },
+      fills: { text: formatInteger(outage.fillsDuring), sort: outage.fillsDuring },
+    },
+  }))
 
   return (
     <div className="flex flex-col gap-4">
@@ -186,84 +228,36 @@ export default async function PowerPage({ searchParams }: PowerPageProps) {
           title="By station"
           description={
             worstStation
-              ? `${getStationName(worstStation.station)} had the most downtime`
+              ? `${getStationName(worstStation.station)} had the most downtime. Click a column heading to sort.`
               : undefined
           }
         >
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Station</TableHead>
-                <TableHead className="text-right">Downtime</TableHead>
-                <TableHead className="text-right">Outages</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {byStation.map((row) => (
-                <TableRow key={row.station}>
-                  <TableCell className="font-medium">{getStationName(row.station)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="h-1.5 w-24 overflow-hidden rounded-full bg-foreground/10">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${(row.totalMinutes / largestStationMinutes) * 100}%`,
-                            backgroundColor: CHART_COLORS.critical,
-                          }}
-                        />
-                      </div>
-                      <span className="w-20 text-right tabular-nums">
-                        {formatDuration(row.totalMinutes)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatInteger(row.outages)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <SortableTable
+            columns={[
+              { key: "station", label: "Station", align: "left" },
+              { key: "downtime", label: "Downtime" },
+              { key: "outages", label: "Outages" },
+            ]}
+            rows={stationRows}
+          />
         </DashboardPanel>
       )}
 
-      <DashboardPanel title="Latest outages" description="Most recent 50 in this period">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Started</TableHead>
-              <TableHead>Station</TableHead>
-              <TableHead className="text-right">Duration</TableHead>
-              <TableHead className="text-right">Lowest voltage</TableHead>
-              <TableHead className="text-right">Fills during</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {latestOutages.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-muted-foreground">
-                  No outages detected in this period.
-                </TableCell>
-              </TableRow>
-            )}
-            {latestOutages.map((outage) => (
-              <TableRow key={`${outage.station}-${outage.startedAt}`}>
-                <TableCell>{outage.startedAt}</TableCell>
-                <TableCell className="font-medium">{getStationName(outage.station)}</TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatDuration(outage.durationMinutes)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatInteger(outage.lowestVolts)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatInteger(outage.fillsDuring)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <DashboardPanel
+        title="Latest outages"
+        description="Most recent 50 in this period. Click a column heading to sort."
+      >
+        <SortableTable
+          columns={[
+            { key: "started", label: "Started", align: "left" },
+            { key: "station", label: "Station", align: "left" },
+            { key: "duration", label: "Duration" },
+            { key: "volts", label: "Lowest voltage" },
+            { key: "fills", label: "Fills during" },
+          ]}
+          rows={outageRows}
+          emptyMessage="No outages detected in this period."
+        />
       </DashboardPanel>
     </div>
   )

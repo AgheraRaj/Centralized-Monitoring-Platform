@@ -4,6 +4,8 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -11,17 +13,20 @@ import {
 import { CHART_COLORS } from "@/lib/chart-colors"
 import { formatInteger } from "@/lib/format"
 
+// Same colours as the "Vehicles by type" card.
 const chartConfig = {
-  averageVehicles: { label: "Average vehicles", color: CHART_COLORS.primary },
+  small: { label: "Auto / small", color: CHART_COLORS.primary },
+  car: { label: "Car", color: CHART_COLORS.good },
+  heavy: { label: "Bus / heavy", color: CHART_COLORS.warning },
 } satisfies ChartConfig
 
 type WeekdayChartProps = {
-  data: { weekday: string; averageVehicles: number }[]
+  data: { weekday: string; small: number; car: number; heavy: number }[]
 }
 
 export function WeekdayChart({ data }: WeekdayChartProps) {
   return (
-    <ChartContainer config={chartConfig} className="aspect-auto h-64 w-full">
+    <ChartContainer config={chartConfig} className="sm:mt-30 aspect-auto h-72 w-full">
       <BarChart data={data} accessibilityLayer>
         <CartesianGrid vertical={false} />
         <XAxis dataKey="weekday" tickLine={false} axisLine={false} tickMargin={8} />
@@ -33,7 +38,15 @@ export function WeekdayChart({ data }: WeekdayChartProps) {
           tickFormatter={formatInteger}
         />
         <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-        <Bar dataKey="averageVehicles" fill="var(--color-averageVehicles)" radius={6} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar dataKey="small" stackId="vehicles" fill="var(--color-small)" />
+        <Bar dataKey="car" stackId="vehicles" fill="var(--color-car)" />
+        <Bar
+          dataKey="heavy"
+          stackId="vehicles"
+          fill="var(--color-heavy)"
+          radius={[6, 6, 0, 0]}
+        />
       </BarChart>
     </ChartContainer>
   )

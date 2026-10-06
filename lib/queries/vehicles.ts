@@ -84,7 +84,15 @@ export async function getStationSummary(
     ORDER BY vehicles DESC
   `
 }
-type VehicleClassRow = { small: number; car: number; heavy: number }
+type VehicleClassRow = {
+  small: number
+  car: number
+  heavy: number
+  // Gas dispensed in kg to each type of vehicle.
+  smallKg: number
+  carKg: number
+  heavyKg: number
+}
 
 // Vehicle type is guessed from the gas filled:
 // Auto / small: up to 4 kg, Car: over 4 up to 12 kg, Bus / heavy: over 12 kg.
@@ -102,12 +110,48 @@ export async function getVehicleClassCounts(params: {
     SELECT
       COUNT(*) FILTER (WHERE quantity_kg <= 4)::int AS small,
       COUNT(*) FILTER (WHERE quantity_kg > 4 AND quantity_kg <= 12)::int AS car,
-      COUNT(*) FILTER (WHERE quantity_kg > 12)::int AS heavy
+      COUNT(*) FILTER (WHERE quantity_kg > 12)::int AS heavy,
+      COALESCE(SUM(quantity_kg) FILTER (WHERE quantity_kg <= 4), 0)::float8 AS "smallKg",
+      COALESCE(SUM(quantity_kg) FILTER (WHERE quantity_kg > 4 AND quantity_kg <= 12), 0)::float8 AS "carKg",
+      COALESCE(SUM(quantity_kg) FILTER (WHERE quantity_kg > 12), 0)::float8 AS "heavyKg"
     FROM mv_dispenser_fills
     WHERE ended_at >= ${range.from}::date
       AND ended_at < ${range.to}::date + 1
       ${stationCondition}
   `)
 
-  return row ?? { small: 0, car: 0, heavy: 0 }
+  return row ?? { small: 0, car: 0, heavy: 0, smallKg: 0, carKg: 0, heavyKg: 0 }
+}
+
+export type DailyVehicleClassRow = {
+  day: string
+  small: number
+  car: number
+  heavy: number
+}
+
+// Vehicles per day split by type. Only days with at least one fill are returned.
+export async function getDailyVehicleClasses(params: {
+  station: StationFilter
+  range: DateRange
+}): Promise<DailyVehicleClassRow[]> {
+  const { station, range } = params
+  const stationCondition =
+    station === ALL_STATIONS
+      ? Prisma.empty
+      : Prisma.sql`AND station_name = ${station}`
+
+  return prisma.$queryRaw<DailyVehicleClassRow[]>(Prisma.sql`
+    SELECT
+      to_char(ended_at::date, 'YYYY-MM-DD') AS day,
+      COUNT(*) FILTER (WHERE quantity_kg <= 4)::int AS small,
+      COUNT(*) FILTER (WHERE quantity_kg > 4 AND quantity_kg <= 12)::int AS car,
+      COUNT(*) FILTER (WHERE quantity_kg > 12)::int AS heavy
+    FROM mv_dispenser_fills
+    WHERE ended_at >= ${range.from}::date
+      AND ended_at < ${range.to}::date + 1
+      ${stationCondition}
+    GROUP BY ended_at::date
+    ORDER BY 1
+  `)
 }
