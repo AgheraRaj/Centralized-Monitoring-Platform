@@ -7,12 +7,14 @@ import { HeroCard } from "@/components/overview/hero-card"
 import { HourHeatmapCard } from "@/components/overview/hour-heatmap-card"
 import { KpiStrip, type Metric } from "@/components/overview/kpi-strip"
 import {
-  StationRankingCard,
-  type RankingRow,
-} from "@/components/overview/station-ranking-card"
+  RankingToggleCard,
+  type RankingMetric,
+  type ToggleRankingRow,
+} from "@/components/overview/ranking-toggle-card"
 import { UnavailableNote } from "@/components/overview/unavailable-note"
 import { UtilizationGaugeCard } from "@/components/overview/utilization-gauge-card"
 import { RangeSelector } from "@/components/range-selector"
+import { compressorUtilization, countCompressors } from "@/lib/compressor-utilization"
 import { getDashboardFilters } from "@/lib/dashboard-filters"
 import { resolveRangePreset } from "@/lib/date-range"
 import { getRatedCapacityKgPerDay } from "@/lib/dispenser-capacity"
@@ -112,6 +114,26 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     ? data.previousOutageSummary.totalMinutes
     : null
 
+  // ---- gas dry-outs (only stations with gas pressure readings can be judged)
+  const hasGasData = isAllStations
+    ? (data.gasMonitoredStations?.length ?? 0) > 0
+    : (data.gasMonitoredStations?.includes(station) ?? false)
+  const gasMinutes =
+    hasGasData && data.gasEvents ? sumOf(data.gasEvents, (event) => event.durationMinutes) : null
+  const previousGasMinutes = data.previousGasEvents
+    ? sumOf(data.previousGasEvents, (event) => event.durationMinutes)
+    : null
+
+  // ---- compressor utilization (compressor data is read for all stations, then narrowed)
+  const forSelectedStation = <T extends { station: string }>(rows: T[] | null) =>
+    rows && (isAllStations ? rows : rows.filter((row) => row.station === station))
+  const compressorRows = forSelectedStation(data.compressorRuns)
+  const previousCompressorRows = forSelectedStation(data.previousCompressorRuns)
+  const compressorUse = compressorRows ? compressorUtilization(compressorRows) : null
+  const previousCompressorUse = previousCompressorRows
+    ? compressorUtilization(previousCompressorRows)
+    : null
+
   const dispenserRows = data.dispenserSummary ?? []
   const ratedKgPerDay = sumOf(dispenserRows, (row) =>
     getRatedCapacityKgPerDay(row.station, row.dispensers)
@@ -129,11 +151,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       change: hasComparison && (
         <ChangeBadge change={relativeChange(totalKg, previousKg)} unit="%" />
       ),
-    },
-    {
-      label: "Vehicles per active day",
-      value: show(totalVehicles === null ? null : averagePerActiveDay, formatInteger),
-      note: `Across ${activeDays.length} days with fills`,
     },
     {
       label: "Full-fill rate",
@@ -173,36 +190,101 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           : undefined,
     },
     {
-      label: "Dispenser utilization",
-      value: show(utilization, formatPercent),
-      note: `${formatInteger(dispenserCount)} dispensers counted`,
+      label: "Gas dry-out time",
+      value: hasGasData ? show(gasMinutes, formatDuration) : "--",
+      change:
+        hasComparison && hasGasData && gasMinutes !== null ? (
+          <ChangeBadge
+            change={relativeChange(gasMinutes, previousGasMinutes)}
+            unit="%"
+            goodWhen="down"
+          />
+        ) : undefined,
+      note: !hasGasData
+        ? "No gas pressure data for this station"
+        : isAllStations
+          ? "Stations with gas pressure data only"
+          : undefined,
+      badge:
+        hasGasData && data.gasEvents
+          ? {
+              text: `${formatInteger(data.gasEvents.length)} dry-out ${data.gasEvents.length === 1 ? "event" : "events"}`,
+              tone: "neutral",
+            }
+          : undefined,
+    },
+    {
+      label: "Compressor utilization",
+      value: show(compressorUse, formatPercent),
+      change: hasComparison && (
+        <ChangeBadge change={pointChange(compressorUse, previousCompressorUse)} unit="pp" />
+      ),
+      note:
+        compressorUse === null || compressorRows === null
+          ? "No compressor data for this station"
+          : `${formatInteger(countCompressors(compressorRows))} compressors, share of 24 h run`,
     },
   ]
 
-  // ---- ranking: stations when all are selected, otherwise dispensers
+  // ---- ranking: stations when all are selected, otherwise dispensers.
+  // Each row carries both measures so the card can switch between them.
   const uptimeByStation = new Map(
     (data.stationUptime ?? []).map((row) => [
       row.station,
       percentOf(row.upHours, row.openHours),
     ])
   )
-  const rankingRows: RankingRow[] = isAllStations
-    ? (data.stationSummary ?? [])
-        .map((row) => ({
-          label: getStationName(row.station),
-          value: row.vehicles,
-          detail: `${formatInteger(row.kg)} kg · ${formatInteger(
+  const kgByDispenser = new Map((data.dispenserKg ?? []).map((row) => [row.dispenser, row.kg]))
+  const perVehicle = (kg: number, vehicles: number) =>
+    formatInteger(vehicles > 0 ? kg / vehicles : 0)
+
+  const rankingRows: ToggleRankingRow[] = isAllStations
+    ? (data.stationSummary ?? []).map((row) => ({
+        label: getStationName(row.station),
+        values: { vehicles: row.vehicles, kg: row.kg },
+        details: {
+          vehicles: `${formatInteger(row.kg)} kg · ${formatInteger(
             row.activeDays > 0 ? row.vehicles / row.activeDays : 0
           )} per active day`,
-          uptime: uptimeByStation.get(row.station) ?? null,
-        }))
-        .sort((a, b) => b.value - a.value)
-    : (data.dispenserBreakdown ?? []).map((row) => ({
-        label: row.label,
-        value: row.fills,
-        detail: `Full-fill rate ${formatPercent(percentOf(row.fullFills, row.fills) ?? 0)}`,
+          kg: `${formatInteger(row.vehicles)} vehicles · ${perVehicle(row.kg, row.vehicles)} kg per vehicle`,
+        },
+        uptime: uptimeByStation.get(row.station) ?? null,
       }))
+    : (data.dispenserBreakdown ?? []).map((row) => {
+        const kg = kgByDispenser.get(row.label) ?? 0
+        return {
+          label: row.label,
+          values: { vehicles: row.fills, kg },
+          details: {
+            vehicles: `Full-fill rate ${formatPercent(percentOf(row.fullFills, row.fills) ?? 0)}`,
+            kg: `${formatInteger(row.fills)} fills · ${perVehicle(kg, row.fills)} kg per fill`,
+          },
+        }
+      })
   const rankingAvailable = isAllStations ? data.stationSummary !== null : data.dispenserBreakdown !== null
+  const rankingMetrics: RankingMetric[] = [
+    {
+      key: "vehicles",
+      label: "By vehicles",
+      description: isAllStations
+        ? "Vehicles served, with uptime"
+        : "Fills with a valid end pressure",
+      valueLabel: isAllStations ? "vehicles" : "fills",
+    },
+    // Gas sold per dispenser may not have loaded; then only the vehicles view is offered.
+    ...(isAllStations || data.dispenserKg
+      ? [
+          {
+            key: "kg",
+            label: "By sales",
+            description: isAllStations
+              ? "Gas sold in kg, with uptime"
+              : "Gas sold by each dispenser, in kg",
+            valueLabel: "kg",
+          },
+        ]
+      : []),
+  ]
 
   const lowestUptime = [...uptimeByStation.entries()]
     .filter((entry): entry is [string, number] => entry[1] !== null)
@@ -281,6 +363,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             description={`Estimated from fill size, not recorded by the dispenser. ${describeVehicleClassRanges().join(" · ")}.`}
             href={link("/full-fill")}
             linkLabel="Full-fill rate"
+            contentAlign="end"
           >
             {data.vehicleClassFills ? (
               <VehicleClassChart data={data.vehicleClassFills} />
@@ -299,14 +382,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         />
 
         {rankingAvailable ? (
-          <StationRankingCard
+          <RankingToggleCard
             title={isAllStations ? "Top stations" : "Dispensers"}
-            description={
-              isAllStations
-                ? "Vehicles served, with uptime"
-                : "Fills with a valid end pressure"
-            }
-            valueLabel={isAllStations ? "vehicles" : "fills"}
+            metrics={rankingMetrics}
             rows={rankingRows}
             href={link(isAllStations ? "/vehicles" : "/full-fill")}
             linkLabel={isAllStations ? "Daily vehicles" : "Full-fill rate"}

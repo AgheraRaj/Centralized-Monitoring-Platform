@@ -8,6 +8,10 @@ type DashboardPanelProps = {
   // Optional link to the detail page, shown at the top right.
   href?: string
   linkLabel?: string
+  // "end" pushes the content to the bottom of the card. When a taller card sits
+  // beside this one in the grid, the spare height becomes space between the
+  // title and the content. The content keeps its own size.
+  contentAlign?: "start" | "end"
   children: ReactNode
 }
 
@@ -16,10 +20,13 @@ export function DashboardPanel({
   description,
   href,
   linkLabel = "View all",
+  contentAlign = "start",
   children,
 }: DashboardPanelProps) {
+  const alignToEnd = contentAlign === "end"
+
   return (
-    <section className="h-full rounded-xl bg-muted/50 p-5">
+    <section className={`h-full rounded-xl bg-muted/50 p-5 ${alignToEnd ? "flex flex-col" : ""}`}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-base font-medium">{title}</h2>
@@ -37,7 +44,7 @@ export function DashboardPanel({
           </Link>
         )}
       </div>
-      {children}
+      {alignToEnd ? <div className="mt-auto">{children}</div> : children}
     </section>
   )
 }

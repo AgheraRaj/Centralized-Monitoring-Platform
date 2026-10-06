@@ -28,6 +28,7 @@ export function HourHeatmapCard({ rows, href, linkLabel }: HourHeatmapCardProps)
       description="Total vehicles in each clock hour across the period. Hover a cell for the exact count."
       href={href}
       linkLabel={linkLabel}
+      contentAlign="end"
     >
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">No fills in this period.</p>

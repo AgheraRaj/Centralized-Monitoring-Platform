@@ -42,6 +42,7 @@ export function FillQualityCard({
       description={`Fills by the pressure reached at the end of the fill, target ${FULL_FILL_THRESHOLD_BAR} bar`}
       href={href}
       linkLabel="Full-fill rate"
+      contentAlign="end"
     >
       <div className="flex flex-col items-center gap-6 sm:flex-row">
         <FillQualityDonut

@@ -1,4 +1,6 @@
 import type { DateRange } from "@/lib/date-range"
+import { getCompressorDailyRuns } from "@/lib/queries/compressors"
+import { getDispenserKg } from "@/lib/queries/dispenser-kg"
 import { getDispenserSummary } from "@/lib/queries/dispensers"
 import {
   getDailyFullFill,
@@ -6,6 +8,7 @@ import {
   getFullFillByVehicleClass,
   getUnmeasuredFillCount,
 } from "@/lib/queries/full-fill"
+import { getGasDryOutEvents, getGasMonitoredStations } from "@/lib/queries/gas-outages"
 import { getHourlyVehicles } from "@/lib/queries/hourly-vehicles"
 import { getLatestOutages, getOutageSummary } from "@/lib/queries/power-outages"
 import { getStationUptime } from "@/lib/queries/uptime"
@@ -56,6 +59,12 @@ export async function loadOverviewData(params: {
     dispenserBreakdown,
     dispenserSummary,
     hourlyVehicles,
+    gasMonitoredStations,
+    gasEvents,
+    previousGasEvents,
+    compressorRuns,
+    previousCompressorRuns,
+    dispenserKg,
   ] = await Promise.all([
     settle("daily vehicles", getDailyVehicles(current)),
     settle("previous daily vehicles", previous ? getDailyVehicles(previous) : skip),
@@ -75,6 +84,15 @@ export async function loadOverviewData(params: {
     settle("dispenser breakdown", station === ALL_STATIONS ? skip : getFullFillBreakdown(current)),
     settle("dispenser summary", getDispenserSummary(current)),
     settle("hourly vehicles", getHourlyVehicles(current)),
+    // Gas dry-outs: only stations with gas pressure readings can be judged.
+    settle("gas monitored stations", getGasMonitoredStations()),
+    settle("gas dry-outs", getGasDryOutEvents(current)),
+    settle("previous gas dry-outs", previous ? getGasDryOutEvents(previous) : skip),
+    // Compressor runs are read for every station and narrowed to the selection on the page.
+    settle("compressor runs", getCompressorDailyRuns(range)),
+    settle("previous compressor runs", previousRange ? getCompressorDailyRuns(previousRange) : skip),
+    // Gas sold per dispenser, for ranking dispensers by sales.
+    settle("dispenser kg", station === ALL_STATIONS ? skip : getDispenserKg(current)),
   ])
 
   return {
@@ -94,6 +112,12 @@ export async function loadOverviewData(params: {
     dispenserBreakdown,
     dispenserSummary,
     hourlyVehicles,
+    gasMonitoredStations,
+    gasEvents,
+    previousGasEvents,
+    compressorRuns,
+    previousCompressorRuns,
+    dispenserKg,
   }
 }
 

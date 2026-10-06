@@ -3,9 +3,10 @@ import { ChangeBadge } from "@/components/overview/change-badge"
 import { HourHeatmapCard } from "@/components/overview/hour-heatmap-card"
 import { KpiStrip, type Metric } from "@/components/overview/kpi-strip"
 import {
-  StationRankingCard,
-  type RankingRow,
-} from "@/components/overview/station-ranking-card"
+  RankingToggleCard,
+  type RankingMetric,
+  type ToggleRankingRow,
+} from "@/components/overview/ranking-toggle-card"
 import { VehiclesTrendChart } from "@/components/overview/vehicles-trend-chart"
 import { HeroPanel } from "@/components/vehicles/hero-panel"
 import { PageHeader } from "@/components/vehicles/page-header"
@@ -23,6 +24,7 @@ import {
   relativeChange,
   sumOf,
 } from "@/lib/overview"
+import { getDispenserKg } from "@/lib/queries/dispenser-kg"
 import { getHourlyVehicles } from "@/lib/queries/hourly-vehicles"
 import {
   getDailyVehicles,
@@ -73,6 +75,7 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
     classCounts,
     previousClassCounts,
     dailyClasses,
+    dispenserKg,
   ] =
     await Promise.all([
       getDailyVehicles({ station, range }),
@@ -86,6 +89,8 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
         ? getVehicleClassCounts({ station, range: previousRange })
         : Promise.resolve(null),
       getDailyVehicleClasses({ station, range }),
+      // Gas sold per dispenser, so dispensers can be ranked by sales. A failure only hides that view.
+      isAllStations ? Promise.resolve(null) : getDispenserKg({ station, range }).catch(() => null),
     ])
 
   // ---- totals and comparison with the previous period
@@ -165,21 +170,58 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
     { label: "Bus / heavy", rule: "over 12 kg", key: "heavy" },
   ] as const
 
-  // ---- ranking: stations when all are selected, otherwise dispensers
-  const rankingRows: RankingRow[] =
+  // ---- ranking: stations when all are selected, otherwise dispensers.
+  // Each row carries both measures so the card can switch between them.
+  const kgByDispenser = new Map((dispenserKg ?? []).map((row) => [row.dispenser, row.kg]))
+  const perVehicle = (kg: number, vehicles: number) =>
+    formatInteger(vehicles > 0 ? kg / vehicles : 0)
+
+  const rankingRows: ToggleRankingRow[] =
     isAllStations && stationSummary
       ? stationSummary.map((row) => ({
           label: getStationName(row.station),
-          value: row.vehicles,
-          detail: `${formatInteger(row.kg)} kg · ${formatInteger(
-            row.activeDays > 0 ? row.vehicles / row.activeDays : 0
-          )} per active day`,
+          values: { vehicles: row.vehicles, kg: row.kg },
+          details: {
+            vehicles: `${formatInteger(row.kg)} kg · ${formatInteger(
+              row.activeDays > 0 ? row.vehicles / row.activeDays : 0
+            )} per active day`,
+            kg: `${formatInteger(row.vehicles)} vehicles · ${perVehicle(row.kg, row.vehicles)} kg per vehicle`,
+          },
         }))
-      : hourlyRows.map((row) => ({
-          label: row.label,
-          value: row.total,
-          detail: `${formatInteger(percentOf(row.total, totalVehicles) ?? 0)}% of this station's vehicles`,
-        }))
+      : hourlyRows.map((row) => {
+          const kg = kgByDispenser.get(row.label) ?? 0
+          return {
+            label: row.label,
+            values: { vehicles: row.total, kg },
+            details: {
+              vehicles: `${formatInteger(percentOf(row.total, totalVehicles) ?? 0)}% of this station's vehicles`,
+              kg: `${formatInteger(row.total)} vehicles · ${perVehicle(kg, row.total)} kg per vehicle`,
+            },
+          }
+        })
+  const rankingMetrics: RankingMetric[] = [
+    {
+      key: "vehicles",
+      label: "By vehicles",
+      description: isAllStations
+        ? "Vehicles served in this period"
+        : "Vehicles served by each dispenser",
+      valueLabel: "vehicles",
+    },
+    // Gas sold per dispenser may not have loaded; then only the vehicles view is offered.
+    ...(isAllStations || dispenserKg
+      ? [
+          {
+            key: "kg",
+            label: "By sales",
+            description: isAllStations
+              ? "Gas sold in kg in this period"
+              : "Gas sold by each dispenser, in kg",
+            valueLabel: "kg",
+          },
+        ]
+      : []),
+  ]
 
   return (
     <div className="flex flex-col gap-4">
@@ -247,14 +289,9 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
           <WeekdayChart data={buildWeekdayClassAverages(dailyClasses)} />
         </DashboardPanel>
 
-        <StationRankingCard
+        <RankingToggleCard
           title={isAllStations ? "Top stations" : "Dispensers"}
-          description={
-            isAllStations
-              ? "Vehicles served in this period"
-              : "Vehicles served by each dispenser"
-          }
-          valueLabel="vehicles"
+          metrics={rankingMetrics}
           rows={rankingRows}
         />
       </div>
