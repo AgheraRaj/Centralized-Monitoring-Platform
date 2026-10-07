@@ -11,9 +11,9 @@ export const VALID_END_PRESSURE_RANGE_BAR = { min: 1, max: 400 } as const
 // included in its class (a 4 kg fill is "Auto / small"). `null` means no upper limit.
 // To change the bands, edit this list only. The query and the page follow it.
 export const VEHICLE_CLASSES = [
-  { key: "auto", label: "Auto / small", maxKg: 4 },
+  { key: "auto", label: "Auto Rikshaw", maxKg: 4 },
   { key: "car", label: "Car", maxKg: 12 },
-  { key: "heavy", label: "Bus / heavy", maxKg: null },
+  { key: "heavy", label: "Bus / Heavy", maxKg: null },
 ] as const
 
 export type VehicleClassKey = (typeof VEHICLE_CLASSES)[number]["key"]

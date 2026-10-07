@@ -8,6 +8,8 @@ type DashboardPanelProps = {
   // Optional link to the detail page, shown at the top right.
   href?: string
   linkLabel?: string
+  // Optional controls (for example a switch) shown at the top right, before the link.
+  action?: ReactNode
   // "end" pushes the content to the bottom of the card. When a taller card sits
   // beside this one in the grid, the spare height becomes space between the
   // title and the content. The content keeps its own size.
@@ -20,6 +22,7 @@ export function DashboardPanel({
   description,
   href,
   linkLabel = "View all",
+  action,
   contentAlign = "start",
   children,
 }: DashboardPanelProps) {
@@ -34,14 +37,19 @@ export function DashboardPanel({
             <p className="text-sm text-muted-foreground">{description}</p>
           )}
         </div>
-        {href && (
-          <Link
-            href={href}
-            className="inline-flex shrink-0 items-center gap-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {linkLabel}
-            <ChevronRight className="size-4" />
-          </Link>
+        {(action || href) && (
+          <div className="flex shrink-0 items-center gap-3">
+            {action}
+            {href && (
+              <Link
+                href={href}
+                className="inline-flex shrink-0 items-center gap-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {linkLabel}
+                <ChevronRight className="size-4" />
+              </Link>
+            )}
+          </div>
         )}
       </div>
       {alignToEnd ? <div className="mt-auto">{children}</div> : children}

@@ -29,6 +29,9 @@ type RankingToggleCardProps = {
   rows: ToggleRankingRow[]
   href?: string
   linkLabel?: string
+  // "header" puts the switch at the top right of the card. "below" (the default)
+  // puts it above the list, which suits narrow cards that also have a link.
+  togglePlacement?: "header" | "below"
 }
 
 // A ranking card with a switch to rank by another measure (vehicles or gas sold).
@@ -39,6 +42,7 @@ export function RankingToggleCard({
   rows,
   href,
   linkLabel,
+  togglePlacement = "below",
 }: RankingToggleCardProps) {
   const [metricKey, setMetricKey] = useState(metrics[0].key)
   const metric = metrics.find((candidate) => candidate.key === metricKey) ?? metrics[0]
@@ -52,36 +56,40 @@ export function RankingToggleCard({
     }))
     .sort((a, b) => b.value - a.value)
 
+  const toggle =
+    metrics.length > 1 ? (
+      <div
+        role="group"
+        aria-label="Rank by"
+        className="inline-flex rounded-lg bg-background/60 p-1"
+      >
+        {metrics.map((option) => (
+          <button
+            key={option.key}
+            type="button"
+            aria-pressed={option.key === metric.key}
+            onClick={() => setMetricKey(option.key)}
+            className={`rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap transition-colors ${
+              option.key === metric.key
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    ) : null
+
   return (
     <DashboardPanel
       title={title}
       description={metric.description}
       href={href}
       linkLabel={linkLabel}
+      action={togglePlacement === "header" ? toggle : undefined}
     >
-      {metrics.length > 1 && (
-        <div
-          role="group"
-          aria-label="Rank by"
-          className="mb-4 inline-flex rounded-lg bg-background/60 p-1"
-        >
-          {metrics.map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              aria-pressed={option.key === metric.key}
-              onClick={() => setMetricKey(option.key)}
-              className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
-                option.key === metric.key
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {togglePlacement === "below" && toggle && <div className="mb-4">{toggle}</div>}
       <RankingList rows={rankedRows} valueLabel={metric.valueLabel} />
     </DashboardPanel>
   )

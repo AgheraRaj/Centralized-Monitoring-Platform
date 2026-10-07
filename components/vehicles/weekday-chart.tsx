@@ -15,9 +15,9 @@ import { formatInteger } from "@/lib/format"
 
 // Same colours as the "Vehicles by type" card.
 const chartConfig = {
-  small: { label: "Auto / small", color: CHART_COLORS.primary },
+  small: { label: "Auto Rikshaw", color: CHART_COLORS.primary },
   car: { label: "Car", color: CHART_COLORS.good },
-  heavy: { label: "Bus / heavy", color: CHART_COLORS.warning },
+  heavy: { label: "Bus / Heavy", color: CHART_COLORS.warning },
 } satisfies ChartConfig
 
 type WeekdayChartProps = {

@@ -165,9 +165,9 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
   ]
 
   const classItems = [
-    { label: "Auto / small", rule: "up to 4 kg", key: "small" },
+    { label: "Auto Rikshaw", rule: "up to 4 kg", key: "small" },
     { label: "Car", rule: "over 4 up to 12 kg", key: "car" },
-    { label: "Bus / heavy", rule: "over 12 kg", key: "heavy" },
+    { label: "Bus / Heavy", rule: "over 12 kg", key: "heavy" },
   ] as const
 
   // ---- ranking: stations when all are selected, otherwise dispensers.
@@ -293,6 +293,7 @@ export default async function VehiclesPage({ searchParams }: VehiclesPageProps) 
           title={isAllStations ? "Top stations" : "Dispensers"}
           metrics={rankingMetrics}
           rows={rankingRows}
+          togglePlacement="header"
         />
       </div>
 
