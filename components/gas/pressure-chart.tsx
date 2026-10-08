@@ -12,6 +12,9 @@ import {
 } from "@/components/ui/chart"
 import { CHART_COLORS } from "@/lib/chart-colors"
 import { formatDate, formatInteger, formatShortDate } from "@/lib/format"
+import { useMemo } from "react"
+import { useChartExport } from "@/components/export/chart-export-provider"
+import { pressureTable } from "@/lib/export/chart-table"
 
 const chartConfig = {
   lowestInlet: { label: "Lowest gas inlet pressure (bar)", color: CHART_COLORS.primary },
@@ -25,6 +28,8 @@ type PressureChartProps = {
 }
 
 export function PressureChart({ data, inletLimit, highBankLimit }: PressureChartProps) {
+  const table = useMemo(() => pressureTable(data, inletLimit, highBankLimit), [data, inletLimit, highBankLimit])
+  useChartExport(table)
   return (
     <ChartContainer config={chartConfig} className="aspect-auto h-64 w-full">
       <LineChart data={data} accessibilityLayer>

@@ -1,6 +1,8 @@
 import { DashboardPanel } from "@/components/dashboard-panel"
 import { CHART_COLORS } from "@/lib/chart-colors"
 import { formatInteger } from "@/lib/format"
+import { ChartExportData } from "@/components/export/chart-export-provider"
+import { hourHeatmapTable } from "@/lib/export/chart-table"
 
 type HourHeatmapCardProps = {
   // One row per station (or dispenser) with 24 hourly vehicle counts.
@@ -30,11 +32,12 @@ export function HourHeatmapCard({ rows, href, linkLabel }: HourHeatmapCardProps)
       linkLabel={linkLabel}
       contentAlign="end"
     >
+      <ChartExportData table={hourHeatmapTable(rows)} />
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">No fills in this period.</p>
       ) : (
         <div className="overflow-x-auto">
-          <div className="min-w-[640px]" role="img" aria-label="Heatmap of vehicles by hour of day">
+          <div data-export-target className="min-w-[640px]" role="img" aria-label="Heatmap of vehicles by hour of day">
             <div className="grid grid-cols-[7rem_repeat(24,minmax(0,1fr))] gap-1 text-[10px] text-muted-foreground">
               <span />
               {HOURS.map((hour) => (

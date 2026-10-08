@@ -1,5 +1,7 @@
 import { ChangeBadge } from "@/components/overview/change-badge"
 import { VehiclesTrendChart } from "@/components/overview/vehicles-trend-chart"
+import { ChartDownloadButton } from "@/components/chart-download-button"
+import { ChartExportProvider } from "@/components/export/chart-export-provider"
 import { formatDate, formatInteger, formatPercent } from "@/lib/format"
 
 type HeroCardProps = {
@@ -32,7 +34,8 @@ export function HeroCard({
   ]
 
   return (
-    <section className="grid overflow-hidden rounded-xl bg-muted/50 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+    <ChartExportProvider>
+      <section className="grid overflow-hidden rounded-xl bg-muted/50 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
       <div className="flex flex-col gap-4 p-5 lg:border-r lg:border-border">
         <div>
           <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
@@ -63,7 +66,10 @@ export function HeroCard({
       </div>
 
       <div className="min-w-0 p-5">
-        <h2 className="text-base font-medium">Vehicles per day</h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-base font-medium">Vehicles per day</h2>
+          <ChartDownloadButton title="Vehicles per day" description={hasComparison ? "This period against the period before it" : "No earlier period to compare with"} summary={`Vehicles served: ${formatInteger(totalVehicles)}`} />
+        </div>
         <p className="mb-3 text-sm text-muted-foreground">
           {hasComparison
             ? "This period against the period before it"
@@ -71,6 +77,7 @@ export function HeroCard({
         </p>
         <VehiclesTrendChart data={chartData} hasComparison={hasComparison} />
       </div>
-    </section>
+      </section>
+    </ChartExportProvider>
   )
 }

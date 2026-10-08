@@ -1,5 +1,8 @@
 import type { ReactNode } from "react"
 
+import { ChartDownloadButton } from "@/components/chart-download-button"
+import { ChartExportProvider } from "@/components/export/chart-export-provider"
+
 type HeroPanelProps = {
   label: string
   value: string
@@ -25,7 +28,8 @@ export function HeroPanel({
   children,
 }: HeroPanelProps) {
   return (
-    <section className="grid overflow-hidden rounded-xl bg-muted/50 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+    <ChartExportProvider>
+      <section className="grid overflow-hidden rounded-xl bg-muted/50 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
       <div className="flex flex-col gap-4 p-5 lg:border-r lg:border-border">
         <div>
           <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
@@ -52,10 +56,14 @@ export function HeroPanel({
       </div>
 
       <div className="min-w-0 p-5">
-        <h2 className="text-base font-medium">{chartTitle}</h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-base font-medium">{chartTitle}</h2>
+          <ChartDownloadButton title={chartTitle} description={chartDescription} summary={`${label}: ${value}`} />
+        </div>
         <p className="mb-3 text-sm text-muted-foreground">{chartDescription}</p>
         {children}
       </div>
-    </section>
+      </section>
+    </ChartExportProvider>
   )
 }

@@ -12,6 +12,9 @@ import {
 } from "@/components/ui/chart"
 import { CHART_COLORS } from "@/lib/chart-colors"
 import { formatDate, formatPercent, formatShortDate } from "@/lib/format"
+import { useMemo } from "react"
+import { useChartExport } from "@/components/export/chart-export-provider"
+import { rateTrendTable } from "@/lib/export/chart-table"
 
 type RateTrendChartProps = {
   // `value` and `previousValue` are percentages from 0 to 100. Null = no data that day.
@@ -29,6 +32,8 @@ export function RateTrendChart({
   hasComparison,
   maxPercent = 100,
 }: RateTrendChartProps) {
+  const table = useMemo(() => rateTrendTable(data, label, hasComparison), [data, label, hasComparison])
+  useChartExport(table)
   const chartConfig = {
     value: { label: `${label}, this period`, color: CHART_COLORS.primary },
     previousValue: { label: `${label}, previous period`, color: CHART_COLORS.previous },

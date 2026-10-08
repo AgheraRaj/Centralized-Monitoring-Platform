@@ -48,6 +48,7 @@ export function FillQualityCard({
         <FillQualityDonut
           fullFills={fullFills}
           belowFills={belowFills}
+          unmeasuredFills={unmeasuredFills}
           centerLabel={rate === null ? "--" : formatPercent(rate)}
         />
         <div className="grid w-full flex-1 gap-4 sm:grid-cols-3">

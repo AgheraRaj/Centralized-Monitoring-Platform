@@ -12,6 +12,9 @@ import {
 } from "@/components/ui/chart"
 import { CHART_COLORS } from "@/lib/chart-colors"
 import { formatDate, formatInteger, formatShortDate } from "@/lib/format"
+import { useMemo } from "react"
+import { useChartExport } from "@/components/export/chart-export-provider"
+import { vehiclesTrendTable } from "@/lib/export/chart-table"
 
 const chartConfig = {
   vehicles: { label: "This period", color: CHART_COLORS.primary },
@@ -24,6 +27,8 @@ type VehiclesTrendChartProps = {
 }
 
 export function VehiclesTrendChart({ data, hasComparison }: VehiclesTrendChartProps) {
+  const table = useMemo(() => vehiclesTrendTable(data, hasComparison), [data, hasComparison])
+  useChartExport(table)
   return (
     <ChartContainer config={chartConfig} className="aspect-auto h-64 w-full">
       <AreaChart data={data} accessibilityLayer>

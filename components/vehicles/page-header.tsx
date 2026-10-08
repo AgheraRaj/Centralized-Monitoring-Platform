@@ -1,4 +1,5 @@
 import { RangeSelector } from "@/components/range-selector"
+import { ExportContextSetter } from "@/components/export-context-setter"
 import { formatDate } from "@/lib/format"
 
 type PageHeaderProps = {
@@ -13,6 +14,7 @@ type PageHeaderProps = {
 export function PageHeader({ title, stationLabel, range, note }: PageHeaderProps) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
+      <ExportContextSetter context={`${stationLabel} · ${formatDate(range.from)} to ${formatDate(range.to)}`} />
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         <p className="text-sm text-muted-foreground">

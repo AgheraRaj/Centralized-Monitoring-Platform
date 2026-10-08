@@ -2,6 +2,9 @@ import { ChevronRight } from "lucide-react"
 import Link from "next/link"
 import type { ReactNode } from "react"
 
+import { ChartDownloadButton } from "@/components/chart-download-button"
+import { ChartExportProvider } from "@/components/export/chart-export-provider"
+
 type DashboardPanelProps = {
   title: string
   description?: string
@@ -29,15 +32,15 @@ export function DashboardPanel({
   const alignToEnd = contentAlign === "end"
 
   return (
-    <section className={`h-full rounded-xl bg-muted/50 p-5 ${alignToEnd ? "flex flex-col" : ""}`}>
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-base font-medium">{title}</h2>
-          {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          )}
-        </div>
-        {(action || href) && (
+    <ChartExportProvider>
+      <section className={`h-full rounded-xl bg-muted/50 p-5 ${alignToEnd ? "flex flex-col" : ""}`}>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-medium">{title}</h2>
+            {description && (
+              <p className="text-sm text-muted-foreground">{description}</p>
+            )}
+          </div>
           <div className="flex shrink-0 items-center gap-3">
             {action}
             {href && (
@@ -49,10 +52,11 @@ export function DashboardPanel({
                 <ChevronRight className="size-4" />
               </Link>
             )}
+            <ChartDownloadButton title={title} description={description} />
           </div>
-        )}
-      </div>
-      {alignToEnd ? <div className="mt-auto">{children}</div> : children}
-    </section>
+        </div>
+        {alignToEnd ? <div className="mt-auto">{children}</div> : children}
+      </section>
+    </ChartExportProvider>
   )
 }

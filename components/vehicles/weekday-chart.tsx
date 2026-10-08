@@ -12,6 +12,9 @@ import {
 } from "@/components/ui/chart"
 import { CHART_COLORS } from "@/lib/chart-colors"
 import { formatInteger } from "@/lib/format"
+import { useMemo } from "react"
+import { useChartExport } from "@/components/export/chart-export-provider"
+import { weekdayTable } from "@/lib/export/chart-table"
 
 // Same colours as the "Vehicles by type" card.
 const chartConfig = {
@@ -25,6 +28,12 @@ type WeekdayChartProps = {
 }
 
 export function WeekdayChart({ data }: WeekdayChartProps) {
+  const table = useMemo(() => weekdayTable(data, {
+    small: chartConfig.small.label,
+    car: chartConfig.car.label,
+    heavy: chartConfig.heavy.label,
+  }), [data])
+  useChartExport(table)
   return (
     <ChartContainer config={chartConfig} className="sm:mt-30 aspect-auto h-72 w-full">
       <BarChart data={data} accessibilityLayer>

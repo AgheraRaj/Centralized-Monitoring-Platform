@@ -9,6 +9,9 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { formatDate, formatInteger, formatShortDate } from "@/lib/format"
+import { useMemo } from "react"
+import { useChartExport } from "@/components/export/chart-export-provider"
+import { vehiclesTrendTable } from "@/lib/export/chart-table"
 
 const chartConfig = {
   vehicles: { label: "Vehicles", color: "var(--chart-2)" },
@@ -19,6 +22,8 @@ type DailyVehiclesChartProps = {
 }
 
 export function DailyVehiclesChart({ data }: DailyVehiclesChartProps) {
+  const table = useMemo(() => vehiclesTrendTable(data.map((row) => ({ ...row, previousVehicles: null })), false), [data])
+  useChartExport(table)
   return (
     <ChartContainer config={chartConfig} className="aspect-auto h-72 w-full">
       <BarChart data={data} accessibilityLayer>

@@ -3,6 +3,8 @@ import type { ReactNode } from "react"
 import { DashboardPanel } from "@/components/dashboard-panel"
 import { CHART_COLORS } from "@/lib/chart-colors"
 import { formatInteger } from "@/lib/format"
+import { ChartExportData } from "@/components/export/chart-export-provider"
+import type { ExportTable } from "@/lib/export/chart-table"
 
 export type VehicleClassItem = {
   label: string
@@ -22,13 +24,28 @@ export const VEHICLE_CLASS_COLORS = [
 
 export function VehicleClassCard({ items }: { items: VehicleClassItem[] }) {
   const total = items.reduce((sum, item) => sum + item.count, 0)
+  const exportTable: ExportTable = {
+    columns: [
+      { label: "Vehicle class", align: "left" },
+      { label: "Vehicles", align: "right" },
+      { label: "Share (%)", align: "right" },
+      { label: "Gas dispensed (kg)", align: "right" },
+    ],
+    rows: items.map((item) => [
+      item.label,
+      formatInteger(item.count),
+      formatInteger(total > 0 ? (item.count / total) * 100 : 0),
+      formatInteger(item.kg),
+    ]),
+  }
 
   return (
     <DashboardPanel
       title="Vehicles by type"
       description="Estimated from the gas filled in each vehicle"
     >
-      <div className="grid gap-3 md:grid-cols-3">
+      <ChartExportData table={exportTable} />
+      <div data-export-target className="grid gap-3 md:grid-cols-3">
         {items.map((item) => {
           const share = total > 0 ? (item.count / total) * 100 : 0
           return (

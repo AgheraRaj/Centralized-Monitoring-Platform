@@ -1,6 +1,8 @@
 import { DashboardPanel } from "@/components/dashboard-panel"
 import { CHART_COLORS } from "@/lib/chart-colors"
 import { formatDate, formatInteger, formatPercent } from "@/lib/format"
+import { ChartExportData } from "@/components/export/chart-export-provider"
+import { measuresTable } from "@/lib/export/chart-table"
 
 type UtilizationGaugeCardProps = {
   // Percent of rated capacity, or null when it cannot be worked out.
@@ -47,8 +49,12 @@ export function UtilizationGaugeCard({
       href={href}
       linkLabel="Capacity"
     >
+      <ChartExportData table={measuresTable([
+        ["Utilization", utilization === null ? "--" : formatPercent(utilization)],
+        ...rows.map(([label, value]) => [label, value] as [string, string]),
+      ])} />
       <div className="relative mx-auto w-full max-w-60">
-        <svg viewBox="0 0 200 115" className="w-full" role="img" aria-label="Utilization gauge">
+        <svg data-export-target viewBox="0 0 200 120" className="w-full" role="img" aria-label="Utilization gauge">
           <path
             d={GAUGE_PATH}
             fill="none"
@@ -67,13 +73,26 @@ export function UtilizationGaugeCard({
             pathLength={100}
             strokeDasharray={`${filledPercent} 100`}
           />
-        </svg>
-        <div className="absolute inset-x-0 bottom-1 text-center">
-          <p className="text-3xl font-semibold tabular-nums">
+          <text
+            x="55"
+            y="82"
+            fill="currentColor"
+            fontSize="30"
+            fontWeight="600"
+            textAnchor="start"
+          >
             {utilization === null ? "--" : formatPercent(utilization)}
-          </p>
-          <p className="text-xs text-muted-foreground">of rated capacity</p>
-        </div>
+          </text>
+          <text
+            x="50"
+            y="105"
+            fill="currentColor"
+            fontSize="12"
+            textAnchor="start"
+          >
+            of rated capacity
+          </text>
+        </svg>
       </div>
 
       <dl className="mt-5 divide-y divide-border text-sm">

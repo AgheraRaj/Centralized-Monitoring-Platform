@@ -11,6 +11,9 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { formatInteger } from "@/lib/format"
+import { useMemo } from "react"
+import { useChartExport } from "@/components/export/chart-export-provider"
+import { vehicleClassTable } from "@/lib/export/chart-table"
 
 type VehicleClassChartProps = {
   data: { label: string; fullFills: number; belowFills: number }[]
@@ -18,6 +21,11 @@ type VehicleClassChartProps = {
 
 // Side-by-side bars (not stacked) so the two groups are easy to compare per class.
 export function VehicleClassChart({ data }: VehicleClassChartProps) {
+  const table = useMemo(() => vehicleClassTable(data, {
+    full: fullFillChartConfig.fullFills.label,
+    below: fullFillChartConfig.belowFills.label,
+  }), [data])
+  useChartExport(table)
   return (
     <ChartContainer config={fullFillChartConfig} className="aspect-auto h-72 w-full">
       <BarChart data={data} accessibilityLayer>

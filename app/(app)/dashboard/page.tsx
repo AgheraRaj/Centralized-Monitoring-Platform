@@ -1,4 +1,5 @@
 import { DashboardPanel } from "@/components/dashboard-panel"
+import { ExportContextSetter } from "@/components/export-context-setter"
 import { VehicleClassChart } from "@/components/full-fill/vehicle-class-chart"
 import { AttentionCard } from "@/components/overview/attention-card"
 import { ChangeBadge } from "@/components/overview/change-badge"
@@ -299,6 +300,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
+        <ExportContextSetter context={`${stationLabel} · ${formatDate(range.from)} to ${formatDate(range.to)}`} />
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
           <p className="text-sm text-muted-foreground">
