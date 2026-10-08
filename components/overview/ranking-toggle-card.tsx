@@ -71,7 +71,7 @@ export function RankingToggleCard({
             onClick={() => setMetricKey(option.key)}
             className={`rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap transition-colors ${
               option.key === metric.key
-                ? "bg-background text-foreground shadow-sm"
+                ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/40"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
